@@ -16,6 +16,9 @@ struct ContentView: View{
     @State private var showingImagePicker = false
     @State private var inputImage: UIImage?
     
+    @State private var currentFilter = CIFilter.sepiaTone()
+    let context = CIContext()
+    
     var body: some View {
         NavigationView{
             VStack {
@@ -38,6 +41,7 @@ struct ContentView: View{
                 HStack{
                     Text("Intensity: ")
                     Slider(value: $filterIntensity)
+                        .onChange(of: filterIntensity){ _ in applyProcessing() }
                 }
                 .padding(.vertical)
                 
@@ -50,23 +54,37 @@ struct ContentView: View{
                     
                     Button("Save", action: save)
                 }
-                .padding([.horizontal, .bottom])
-                .navigationTitle("Instafilter")
-                .onChange (of: inputImage) {_ in loadImage () }
-                .sheet(isPresented: $showingImagePicker) {
-                    imagePicker(image: $inputImage)
-                }
+            }
+            .padding([.horizontal, .bottom])
+            .navigationTitle("Instafilter")
+            .onChange (of: inputImage) {_ in loadImage () }
+            .sheet(isPresented: $showingImagePicker) {
+                imagePicker(image: $inputImage)
             }
         }
     }
     func loadImage() {
         guard let inputImage = inputImage else { return }
         
-        image = Image(uiImage: inputImage)
+        let beginImage = CIImage(image: inputImage)
+        currentFilter.setValue(beginImage, forKey: kCIInputImageKey)
+        applyProcessing()
+        
     }
 
     func save() {
         
+    }
+    
+    func applyProcessing(){
+        currentFilter.intensity = Float(filterIntensity)
+        
+        guard let outputImage = currentFilter.outputImage else { return }
+        
+        if let cgimg = context.createCGImage(outputImage , from: outputImage.extent) {
+            let uiImage = UIImage(cgImage: cgimg)
+            image = Image(uiImage: uiImage)
+        }
     }
 }
 
