@@ -12,6 +12,7 @@ import SwiftUI
 struct ContentView: View{
     @State private var image: Image?
     @State private var filterIntensity = 0.5
+    @State private var radiusIntensity = 0.5
     
     @State private var showingImagePicker = false
     @State private var inputImage: UIImage?
@@ -49,6 +50,13 @@ struct ContentView: View{
                 .padding(.vertical)
                 
                 HStack{
+                    Text("Radius: ")
+                    Slider(value: $radiusIntensity)
+                        .onChange(of: radiusIntensity){ _ in applyProcessing() }
+                }
+                .padding(.vertical)
+                
+                HStack{
                     Button("Change Filter") {
                         showingFilterSheet = true
                     }
@@ -56,6 +64,7 @@ struct ContentView: View{
                     Spacer()
                     
                     Button("Save", action: save)
+                        .disabled(image == nil ? true : false)
                 }
             }
             .padding([.horizontal, .bottom])
@@ -72,7 +81,9 @@ struct ContentView: View{
                 Button("Sepia Tone") { setFilter(CIFilter.sepiaTone()) }
                 Button("Unsharp Mask") { setFilter(CIFilter.unsharpMask()) }
                 Button("Vignette") { setFilter(CIFilter.vignette()) }
-                Button("Cancel", role: .cancel) { }   
+                Button("Box Blur") { setFilter(CIFilter.boxBlur()) }
+                Button("Bloom") { setFilter(CIFilter.bloom()) }
+                Button("Cancel", role: .cancel) { }
             }
         }
     }
@@ -108,7 +119,7 @@ struct ContentView: View{
         }
         
         if inputKey.contains(kCIInputRadiusKey) {
-            currentFilter.setValue(filterIntensity * 200, forKey: kCIInputRadiusKey)
+            currentFilter.setValue(radiusIntensity * 200, forKey: kCIInputRadiusKey)
         }
         
         if inputKey.contains(kCIInputScaleKey) {
